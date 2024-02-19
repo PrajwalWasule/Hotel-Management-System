@@ -1,8 +1,53 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom'
 import loginimg from '../images/signup.jpg'
+import { event } from "jquery";
+import { toast } from "react-toastify";
+import HmsAPIService from "../services/HmsAPIService";
 
 export default function Signup() {
+
+  let [signUpData, setSignUpData] = useState({
+    firstName: '', lastName: '', dob: '', address: '', phone: ''
+    , email: '', password: ''
+  });
+
+  const navigate = useNavigate();
+
+  const changeHandle = (event) => {
+    const { name, value } = event.target
+    setSignUpData({ ...signUpData, [name]: value });
+  }
+
+  const addData = (event) => {
+    event.preventDefault();
+    if (signUpData.firstName === "" || signUpData.lastName === "" || signUpData.address === "" || signUpData.phone
+      === "" || signUpData.email === "" || signUpData.password === "") {
+      toast.error("Plase enter valid data..");
+      return;
+    }
+    let signUpData1 = {
+      firstName: signUpData.firstName, lastName: signUpData.lastName, dob: signUpData.dob, address: signUpData.address, phone: signUpData.phone
+      , email: signUpData.email, password: signUpData.password
+    }
+    HmsAPIService.addUser(signUpData1).then((result) => {
+      console.log(result);
+      navigate('/login', { replace: true });
+      toast.success("SignUP Successful..");
+    }).catch((error) => {
+      console.log(error);
+      toast.error("Error 400/500..");
+    });
+
+    setSignUpData({
+      firstName: "", lastName: "", dob: "", address: "", phone: ""
+      , email: "", password: ""
+    })
+  }
+
+
+
   return (
     <div>
       <div className="back_re">
@@ -38,6 +83,10 @@ export default function Signup() {
                             type="text"
                             required=""
                             id="reg-fn"
+                            placeholder="Enter First Name"
+                            name="firstName"
+                            value={signUpData.firstName}
+                            onChange={changeHandle}
                           />
                           <div className="invalid-feedback">
                             Please enter your first name!
@@ -52,6 +101,10 @@ export default function Signup() {
                             type="text"
                             required=""
                             id="reg-ln"
+                            placeholder="Enter Last Name"
+                            name="lastName"
+                            value={signUpData.lastName}
+                            onChange={changeHandle}
                           />
                           <div className="invalid-feedback">
                             Please enter your last name!
@@ -66,6 +119,10 @@ export default function Signup() {
                             type="date"
                             required=""
                             id="reg-dob"
+                            placeholder="Enter Date Of Birth"
+                            name="dob"
+                            value={signUpData.dob}
+                            onChange={changeHandle}
                           />
                           <div className="invalid-feedback">
                             Please enter valid date!
@@ -80,13 +137,17 @@ export default function Signup() {
                             type="text"
                             required=""
                             id="reg-addr"
+                            placeholder="Enter Address"
+                            name="address"
+                            value={signUpData.address}
+                            onChange={changeHandle}
                           />
                           <div className="invalid-feedback">
                             Please enter your address!
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="col-sm-6">
                         <div className="form-group">
                           <label for="reg-email">E-mail Address</label>
@@ -95,6 +156,10 @@ export default function Signup() {
                             type="email"
                             required=""
                             id="reg-email"
+                            placeholder="Enter Email-Address"
+                            name="email"
+                            value={signUpData.email}
+                            onChange={changeHandle}
                           />
                           <div className="invalid-feedback">
                             Please enter valid email address!
@@ -109,6 +174,10 @@ export default function Signup() {
                             type="text"
                             required=""
                             id="reg-phone"
+                            placeholder="Enter Phone Number"
+                            name="phone"
+                            value={signUpData.phone}
+                            onChange={changeHandle}
                           />
                           <div className="invalid-feedback">
                             Please enter your phone number!
@@ -123,6 +192,10 @@ export default function Signup() {
                             type="password"
                             required=""
                             id="reg-password"
+                            placeholder="Enter Password"
+                            name="password"
+                            value={signUpData.password}
+                            onChange={changeHandle}
                           />
                           <div className="invalid-feedback">
                             Please enter password!
@@ -148,16 +221,16 @@ export default function Signup() {
                     </div>
 
                     <div className="text-right pt-3">
-                      <button className="btn btn-primary" type="submit">
+                      <button className="btn btn-primary" type="button" onClick={addData}>
                         Sign Up
-                      </button><br/>
+                      </button><br />
                       <label for="signin" className="mx-2 pt-3">Already have an account?</label>
-                    <Link
-                      className="nav-link-inline font-size-sm"
-                      to="/login"
-                    >
-                       Sign In here 
-                    </Link>
+                      <Link
+                        className="nav-link-inline font-size-sm"
+                        to="/login"
+                      >
+                        Sign In here
+                      </Link>
                     </div>
                   </form>
                 </div>

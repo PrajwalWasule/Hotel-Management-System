@@ -1,13 +1,64 @@
-import React,{useState} from "react";
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import TrekAPIService from '../services/HmsAPIService';
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import loginimg from "../images/login3.jpg";
 
 export default function SignIn() {
-    const [selectedOption, setSelectedOption] = useState('option1');
 
-  const handleOptionChange = (event) => {
+  const [logindata, setLoginData] = useState({ email: '', password: '' });
+  const [dbUser, setDbUser] = useState({});
+  const navigate = useNavigate();
+
+  const [selectedOption, setSelectedOption] = useState({ option: '' });
+
+  const handleSelectChange = (event) => {
     setSelectedOption(event.target.value);
+
   };
+
+  const changeHandle = (event) => {
+    const { name, value } = event.target;
+    setLoginData({ ...logindata, [name]: value });
+  };
+
+  const authenticate = async (event) => {
+    event.preventDefault();
+    if (logindata.email === '' || logindata.password === '') {
+      alert('Please enter valid fields');
+      return;
+    }
+
+    try {
+      const result = await TrekAPIService.getUserByUnamePassword(logindata, selectedOption)
+      setDbUser(result.data);
+      toast.success('Login success');
+      sessionStorage.setItem('userinfo', JSON.stringify(result.data));
+      if (selectedOption === 'manager' || selectedOption === 'owner') {
+        if (selectedOption === 'manager') {
+          navigate('/manager', { replace: true });
+        }
+        else {
+          navigate('/owner', { replace: true });
+        }
+
+      }
+      else {
+        navigate('/room', { replace: true });
+      }
+
+    } catch (error) {
+      console.error(error);
+      toast.error('Login issue / Server side');
+    }
+
+    setLoginData({ email: '', password: '' });
+  };
+
+
+
   return (
     <div>
       <div className="back_re">
@@ -27,55 +78,14 @@ export default function SignIn() {
           <div className="col-md-6 pt-sm-3">
             <div className="card">
               <div className="card-body">
-                <h1 className="h4 mb-1">Sign in</h1>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      value="guest"
-                      className="mx-2"
-                      checked={selectedOption === "guest"}
-                      onChange={handleOptionChange}
-                    />
-                    Guest
-                  </label>
+                <label htmlFor="dropdown">Sign in as :</label>
+                <select id="dropdown" value={selectedOption} onChange={handleSelectChange}>
+                  <option value="">-- Select --</option>
+                  <option value="guest">Guest</option>
+                  <option value="manager">Manager</option>
+                  <option value="owner">Owner</option>
+                </select>
 
-                  <label>
-                    <input
-                      type="radio"
-                      value="staff"
-                      className="mx-2"
-                      checked={selectedOption === "staff"}
-                      onChange={handleOptionChange}
-                    />
-                    Staff
-                  </label>
-
-                  <label>
-                    <input
-                      type="radio"
-                      value="owner"
-                      className="mx-2"
-                      checked={selectedOption === "owner"}
-                      onChange={handleOptionChange}
-                    />
-                    Owner
-                  </label>
-                </div>
-                {/* <div className="d-sm-flex align-items-center py-3">
-                        <h3 className="h6 font-weight-semibold opacity-70 mb-3 mb-sm-2 mr-sm-3">With social account:</h3>
-                        <div>
-                            <a className="social-btn sb-facebook mr-2 mb-2" href="#" data-toggle="tooltip" title="" data-original-title="Sign in with Facebook">
-                                <i className="fa fa-facebook"></i>
-                            </a>
-                            <a className="social-btn sb-twitter mr-2 mb-2" href="#" data-toggle="tooltip" title="" data-original-title="Sign in with Twitter">
-                                <i className="fa fa-twitter"></i> 
-                            </a>
-                            <a className="social-btn sb-linkedin mr-2 mb-2" href="#" data-toggle="tooltip" title="" data-original-title="Sign in with LinkedIn">
-                                <i className="fa fa-linkedin"></i>
-                            </a>
-                        </div>
-                    </div> */}
                 <br />
                 <hr />
                 {/* <h3 className="h6 font-weight-semibold opacity-70 pt-4 pb-2">Or using form below</h3> */}
@@ -100,11 +110,15 @@ export default function SignIn() {
                         </svg>
                       </span>
                     </div>
+
                     <input
                       className="form-control"
-                      type="email"
-                      placeholder="Email"
-                      required=""
+                      type="text"
+                      id="email"
+                      placeholder="Enter email"
+                      value={logindata.email}
+                      name="email"
+                      onChange={changeHandle}
                     />
                     <div className="invalid-feedback">
                       Please enter valid email address!
@@ -140,10 +154,14 @@ export default function SignIn() {
                     </div>
                     <input
                       className="form-control"
-                      type="password"
-                      placeholder="Password"
-                      required=""
+                      id="password"
+                      placeholder="Enter password"
+                      value={logindata.password}
+                      name="password"
+                      type='password'
+                      onChange={changeHandle}
                     />
+
                     <div className="invalid-feedback">
                       Please enter valid password!
                     </div>
@@ -157,26 +175,25 @@ export default function SignIn() {
                         Remember me
                       </label>
                     </div> */}
-                    <Link
+                    {/* <Link
                       className="nav-link-inline font-size-sm"
                       to="account-password-recovery.html"
                     >
                       Forgot password?
-                    </Link>
+                    </Link> */}
                   </div>
                   <hr className="mt-4" />
                   <div className="text-right">
-                    <button className="btn btn-primary" type="submit">
+                    <button className="btn btn-primary" type="submit" onClick={authenticate}>
                       Sign In
                     </button>
-                    <br/>
-                    <label for="signup" className="mx-2">Dont have an account?</label>
-                    <Link
-                      className="nav-link-inline font-size-sm"
-                      to="/signup"
-                    >
-                       Sign Up here 
-                    </Link>
+                    <br />
+
+                    {selectedOption === 'guest' && (<div>
+                      <label for="signup" className="mx-2">Dont have an account?</label>
+                      <Link className="nav-link-inline font-size-sm" to="/signup"> Sign Up here </Link>
+                    </div>)}
+
                   </div>
                 </form>
               </div>
@@ -192,7 +209,7 @@ export default function SignIn() {
             </div>
           </div>
         </div>
-      </div> 
-         </div>
+      </div>
+    </div>
   );
 }
